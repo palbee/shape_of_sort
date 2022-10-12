@@ -2,9 +2,9 @@ from random import shuffle
 
 import PIL.Image
 import numpy as np
+import tabulate
 
 algorithms = {}
-import tabulate
 
 
 def add_alg(func):
@@ -17,6 +17,49 @@ def add_alg(func):
     algorithms[fname] = func
 
     return func
+
+
+@add_alg
+def quicksort(cells):
+    trace = [cells[:]]
+    compares = []
+
+    def partition(A, lo, hi):
+        """Hoare partition scheme"""
+        pivot_index = (hi + lo) // 2
+        pivot = A[pivot_index]
+        i = lo - 1
+        j = hi + 1
+
+        while True:
+            i = i + 1
+            compares.append([i, pivot_index])
+            while A[i] < pivot:
+                i = i + 1
+
+            j = j - 1
+            compares.append([j, pivot_index])
+            while A[j] > pivot:
+                j = j - 1
+
+            if i >= j:
+                return j
+
+            A[i], A[j] = A[j], A[i]
+            trace.append(A[:])
+
+    def qsort(A, lo, hi):
+        if lo >= 0 and hi >= 0 and lo < hi:
+            p = partition(A, lo, hi)
+            if (p - lo) < (hi - (p + 1)):
+                qsort(A, lo, p)
+                qsort(A, p + 1, hi)
+            else:
+                qsort(A, p + 1, hi)
+                qsort(A, lo, p)
+
+    qsort(cells, 0, len(cells) - 1)
+    return trace, compares
 
 
 def prepare_data(n_cells, reverse=False, shuffled=True):
@@ -91,7 +134,6 @@ def merge(cells):
 
     dest = cells[:]
     width = 1
-    # print(f"{source=}")
     while width < n:
         i = 0
         while i < n:
@@ -130,18 +172,14 @@ def insertion(cells):
     n = len(cells)
     i = 1
     while i < n:
-        swap = False
         j = i
         compares.append([j - 1, j])
         while j > 0 and cells[j - 1] > cells[j]:
             cells[j], cells[j - 1] = cells[j - 1], cells[j]
             trace.append(cells[:])
-            swap = True
             j -= 1
             if j > 0:
                 compares.append([j - 1, j])
-        # if swap:
-        #     trace.append(cells[:])
         i += 1
     return trace, compares
 
@@ -181,19 +219,20 @@ def render(history, destination):
 
 
 def main():
-    n_cells = 256
+    n_cells = 128
     report = []
-    start_data = prepare_data(n_cells, shuffled=True, reverse=False)
-    for alg_name in ['heapsort']:
+    start_data = prepare_data(n_cells, shuffled=True, reverse=True)
+    for alg_name in ["quicksort"]:
         trace, compares = algorithms[alg_name](start_data[:])
+        # print(f"{trace[0]} -> {trace[-1]}")
         # with open(f"{alg_name}.dot", 'w') as dest:
         #     render(trace, dest)
         memory = np.zeros((len(trace), n_cells, 3), dtype="uint8")
         for row, cols in enumerate(trace):
             cols = np.array(cols)
-            memory[row, :, 0] = cols
-            memory[row, :, 1] = cols
-            memory[row, :, 2] = cols
+            memory[row, :, 0] = cols / n_cells * 256
+            memory[row, :, 1] = cols / n_cells * 256
+            memory[row, :, 2] = cols / n_cells * 256
         img = PIL.Image.fromarray(memory, mode="RGB")
         img = img.convert("RGB")
         img.save(f"{alg_name}_{n_cells}_memory.png")
