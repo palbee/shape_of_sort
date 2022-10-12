@@ -20,7 +20,8 @@ def add_alg(func):
 
 
 @add_alg
-def quicksort(cells):
+def quicksort_hoare(cells):
+    """Implement Hoare's version of quicksort"""
     trace = [cells[:]]
     compares = []
 
@@ -222,7 +223,7 @@ def main():
     n_cells = 128
     report = []
     start_data = prepare_data(n_cells, shuffled=True, reverse=True)
-    for alg_name in ["quicksort"]:
+    for alg_name in ["quicksort_hoare"]:
         trace, compares = algorithms[alg_name](start_data[:])
         # print(f"{trace[0]} -> {trace[-1]}")
         # with open(f"{alg_name}.dot", 'w') as dest:
