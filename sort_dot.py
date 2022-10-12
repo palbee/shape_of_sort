@@ -63,6 +63,44 @@ def quicksort_hoare(cells):
     return trace, compares
 
 
+@add_alg
+def quicksort_lomuto(cells):
+    """Implement Lomuto's version of quicksort"""
+    trace = [cells[:]]
+    compares = []
+
+    def partition(A, lo, hi):
+        """Lomuto partition scheme"""
+        pivot = A[hi]
+        i = lo - 1
+
+        for j in range(lo, hi):
+            compares.append([j, hi])
+            if A[j] <= pivot:
+                i += 1
+                A[i], A[j] = A[j], A[i]
+                trace.append(A[:])
+
+        i += 1
+        A[i], A[hi] = A[hi], A[i]
+        trace.append(A[:])
+        return i
+
+    def qsort(A, lo, hi):
+        if lo >= hi or lo < 0:
+            return
+        p = partition(A, lo, hi)
+        if ((p - 1) - lo) < (hi - (p + 1)):
+            qsort(A, lo, p - 1)
+            qsort(A, p + 1, hi)
+        else:
+            qsort(A, p + 1, hi)
+            qsort(A, lo, p - 1)
+
+    qsort(cells, 0, len(cells) - 1)
+    return trace, compares
+
+
 def prepare_data(n_cells, reverse=False, shuffled=True):
     cells = list(range(n_cells))
     if reverse:
@@ -220,15 +258,16 @@ def render(history, destination):
 
 
 def main():
-    n_cells = 128
+    n_cells = 256
     report = []
     start_data = prepare_data(n_cells, shuffled=True, reverse=True)
-    for alg_name in ["quicksort_hoare"]:
+    for alg_name in ["quicksort_hoare", "quicksort_lomuto"]:
         trace, compares = algorithms[alg_name](start_data[:])
         # print(f"{trace[0]} -> {trace[-1]}")
         # with open(f"{alg_name}.dot", 'w') as dest:
         #     render(trace, dest)
         memory = np.zeros((len(trace), n_cells, 3), dtype="uint8")
+
         for row, cols in enumerate(trace):
             cols = np.array(cols)
             memory[row, :, 0] = cols / n_cells * 256
