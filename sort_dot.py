@@ -258,14 +258,13 @@ def render(history, destination):
 
 
 def main():
-    n_cells = 256
+    n_cells = 32
     report = []
     start_data = prepare_data(n_cells, shuffled=True, reverse=True)
-    for alg_name in ["quicksort_hoare", "quicksort_lomuto"]:
+    for alg_name in algorithms.keys():
         trace, compares = algorithms[alg_name](start_data[:])
-        # print(f"{trace[0]} -> {trace[-1]}")
-        # with open(f"{alg_name}.dot", 'w') as dest:
-        #     render(trace, dest)
+        with open(f"{alg_name}.dot", 'w') as dest:
+            render(trace, dest)
         memory = np.zeros((len(trace), n_cells, 3), dtype="uint8")
 
         for row, cols in enumerate(trace):
@@ -282,7 +281,8 @@ def main():
             checks[row, cols] = 1
         img = PIL.Image.fromarray(checks)
         img.save(f"{alg_name}_{n_cells}_compares.png")
-        report.append({'Algorithm': alg_name, 'Compares': len(checks), 'Assignments': len(trace)})
+
+        report.append({'Algorit hm': alg_name, 'Compares': len(checks), 'Assignments': len(trace)})
 
     print(tabulate.tabulate(report, headers='keys'))
 
