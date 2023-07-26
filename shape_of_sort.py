@@ -1,3 +1,4 @@
+import math
 from random import shuffle
 
 import PIL.Image
@@ -17,6 +18,55 @@ def add_alg(func):
     algorithms[fname] = func
 
     return func
+
+
+@add_alg
+def radix_sort_lsd(cells):
+    """Radix sort operates by grouping keys by their radix positions."""
+    trace = [cells[:]]
+    compares = []
+    base = 7
+
+    def combine_buckets(buckets, cells=[]):
+        """Concatenates the buckets, returning a concatenated list.
+        :type buckets: list of lists
+        :returns: list
+        """
+
+        concatenated = []
+        for bucket in buckets:
+            concatenated.extend(bucket)
+        concatenated.extend(cells)
+        return concatenated
+
+    def get_digit_at_radix_position(value, postion):
+        """Radix position 0 is the 1s position. While 1 is the 10s, and 2 is the 100s, and n is the 10**n
+        """
+        radix_position = base ** postion
+        return (value // radix_position) % base
+
+    # Find number of merge cycles
+    n_radix_positions = 0
+    for x in cells:
+        try:
+            digits = math.floor(math.log(x) / math.log(base)) + 1
+        except ValueError:
+            digits = 1
+
+        if digits > n_radix_positions:
+            n_radix_positions = digits
+
+    for position in range(n_radix_positions):
+        buckets = []
+        for x in range(base):
+            buckets.append(list())
+        for index, cell in enumerate(cells):
+            buckets[get_digit_at_radix_position(cell, position)].append(cell)
+            compares.append([index, index])
+            glommed = combine_buckets(buckets, cells[index + 1:])
+            trace.append(glommed)
+        cells = combine_buckets(buckets)
+    return trace, compares
 
 
 @add_alg
@@ -258,13 +308,13 @@ def render(history, destination):
 
 
 def main():
-    n_cells = 32
+    n_cells = 64
     report = []
-    start_data = prepare_data(n_cells, shuffled=True, reverse=True)
+    start_data = prepare_data(n_cells, shuffled=False, reverse=True)
     for alg_name in algorithms.keys():
         trace, compares = algorithms[alg_name](start_data[:])
-        with open(f"{alg_name}.dot", 'w') as dest:
-            render(trace, dest)
+        # with open(f"{alg_name}.dot", 'w') as dest:
+        #     render(trace, dest)
         memory = np.zeros((len(trace), n_cells, 3), dtype="uint8")
 
         for row, cols in enumerate(trace):
